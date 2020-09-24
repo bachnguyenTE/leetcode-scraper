@@ -5,15 +5,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 # dummy account information 
 USERNAME = "mephistophelesgrailtaker"
 PASSWORD = "holygrail99"
-SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/397441290/"
+SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/400104611/"
 
 # initialize Chrome driver with Selenium
-options = webdriver.ChromeOptions()
-options.add_argument('--ignore-certificate-errors')
-options.add_argument('--incognito')
-options.add_argument('--headless')
 DRIVER_PATH = 'chromedriver.exe'
 driver = webdriver.Chrome(executable_path=DRIVER_PATH)
+driver.maximize_window()
 
 # Sign in to Leetcode using dummy account 
 driver.get(SUBMISSION_LOGIN)
@@ -26,4 +23,8 @@ password.send_keys(PASSWORD)
 time.sleep(1)
 driver.find_element_by_id("signin_btn").click()
 
-# Get to the submission stats page 
+# Search for the runtime plot 
+time.sleep(10)
+runtime_plot = driver.find_element_by_id("runtime_detail_plot_placeholder")
+print(runtime_plot.location)
+print(runtime_plot.size)
