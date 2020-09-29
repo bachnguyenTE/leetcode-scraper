@@ -1,6 +1,7 @@
 import time 
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException
 
 # dummy account information 
 USERNAME = "mephistophelesgrailtaker"
@@ -23,8 +24,35 @@ password.send_keys(PASSWORD)
 time.sleep(1)
 driver.find_element_by_id("signin_btn").click()
 
-# Search for the runtime plot 
+# Search for the memory plot 
 time.sleep(10)
-runtime_plot = driver.find_element_by_id("runtime_detail_plot_placeholder")
-print(runtime_plot.location)
-print(runtime_plot.size)
+memory_plot = driver.find_element_by_id("memory_detail_plot_placeholder")
+print(memory_plot.location)
+print(memory_plot.size)
+
+# Create a dict to check for duplicate data points during loop-checking
+prevData = ''
+
+# Perform mouseover the memory plot
+for xoffset in range(0, memory_plot.size['width']):
+    try:
+        hover = ActionChains(driver).move_to_element_with_offset(memory_plot, xoffset, memory_plot.size['height']-50)
+        hover.perform()
+    except MoveTargetOutOfBoundsException:
+        break
+
+    try:
+        infoBox = driver.find_element_by_id('jquery-flot-comments-tooltip')
+
+        if infoBox.text == prevData:
+            continue
+        else:
+            prevData = infoBox.text
+            print(infoBox.text)
+        hover.click().perform()
+        time.sleep(3)
+        sampleCode = driver.find_element_by_id('sample-submission-code')
+        print(sampleCode.text)
+        ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+    except NoSuchElementException:
+        continue
