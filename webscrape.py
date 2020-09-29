@@ -1,4 +1,4 @@
-import time 
+import time, re 
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException
@@ -7,6 +7,7 @@ from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBo
 USERNAME = "mephistophelesgrailtaker"
 PASSWORD = "holygrail99"
 SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/400104611/"
+PROBLEM_SET = 'atoi'
 
 # initialize Chrome driver with Selenium
 DRIVER_PATH = 'chromedriver.exe'
@@ -35,9 +36,11 @@ prevData = ''
 
 # Perform mouseover the memory plot
 for xoffset in range(0, memory_plot.size['width']):
+
     try:
         hover = ActionChains(driver).move_to_element_with_offset(memory_plot, xoffset, memory_plot.size['height']-50)
         hover.perform()
+
     except MoveTargetOutOfBoundsException:
         break
 
@@ -48,11 +51,18 @@ for xoffset in range(0, memory_plot.size['width']):
             continue
         else:
             prevData = infoBox.text
-            print(infoBox.text)
+            label = re.search('\((.+?),', prevData).group(1)
+            print(label)
+
         hover.click().perform()
         time.sleep(3)
+
+        outputFile = open('{}_runtime_{}.txt'.format(PROBLEM_SET, label), 'w')
         sampleCode = driver.find_element_by_id('sample-submission-code')
-        print(sampleCode.text)
+        outputFile.write(sampleCode.text)
+        outputFile.close()
+
         ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+    
     except NoSuchElementException:
         continue
