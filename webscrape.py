@@ -1,13 +1,18 @@
 import time, re, os
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException, JavascriptException
+from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException, TimeoutException, JavascriptException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+
 
 # dummy account information 
 USERNAME = "mephistophelesgrailtaker"
 PASSWORD = "holygrail99"
-SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/400104611/"
-PROBLEM_SET = 'atoi'
+SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/402262190/"
+PROBLEM_SET = 'twoSum'
 
 # initialize Chrome driver with Selenium
 DRIVER_PATH = 'chromedriver.exe'
@@ -50,7 +55,7 @@ def plotScrape(plotType: str, data_path, yoffset: int):
     prevData = ''
 
     # Perform mouseover the memory plot
-    for xoffset in range(0, plot_holder.size['width'] - 210, 3):
+    for xoffset in range(80, plot_holder.size['width'] - 200, 4):
 
         # Search for clickable bars in the plot 
         try:
@@ -72,18 +77,39 @@ def plotScrape(plotType: str, data_path, yoffset: int):
                 label = re.search('\((.+?),', prevData).group(1)
                 print(label)
 
+            # try:
+            #     hover.click().perform()
+            #     time.sleep(5)
+            #     WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')))
+
+            #     # Scrape and write sample code to file
+            #     outputFile = open('{}_{}_{}.txt'.format(PROBLEM_SET, plotType, label), 'w')
+            #     sampleCode = driver.find_element_by_id('sample-submission-code')
+            #     outputFile.write(sampleCode.text)
+            #     outputFile.close()
+            #     ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+            # except TimeoutException:
+            #     print('Timeout occured at {} {}.'.format(plotType, label))
+            #     ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+            #     continue
+
             hover.click().perform()
-            time.sleep(3)
+            time.sleep(5)
 
             # Scrape and write sample code to file
-            outputFile = open('{}_{}_{}.txt'.format(PROBLEM_SET, plotType, label), 'w')
+            filename = '{}_{}_{}.txt'.format(PROBLEM_SET, plotType, label)
+            outputFile = open(filename, 'w')
             sampleCode = driver.find_element_by_id('sample-submission-code')
             outputFile.write(sampleCode.text)
             outputFile.close()
 
-            ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+            if os.path.getsize(filename) < 50:
+                print('Empty file deleted at {} {}.'.format(plotType, label))
+                os.remove(filename)
+
+            webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
         
-        except (NoSuchElementException, AttributeError, JavascriptException) as e:
+        except (NoSuchElementException, AttributeError, JavascriptException):
             continue
 
     # Go back to the original directory for all datasets
@@ -91,7 +117,7 @@ def plotScrape(plotType: str, data_path, yoffset: int):
 
 
 # Scrape and generate files for runtime plot
-plotScrape('runtime', path,37)
+plotScrape('runtime', path, 37)
 
 # Scrape and generate files for memory plot
 plotScrape('memory', path, 45)
