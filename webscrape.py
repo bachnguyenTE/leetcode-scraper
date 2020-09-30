@@ -109,7 +109,7 @@ def plotScrape(plotType: str, data_path, yoffset: int):
 
             webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
         
-        except (NoSuchElementException, AttributeError, JavascriptException):
+        except (NoSuchElementException, AttributeError):
             continue
 
     # Go back to the original directory for all datasets
