@@ -1,7 +1,7 @@
-import time, re 
+import time, re, os
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException
+from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException, JavascriptException
 
 # dummy account information 
 USERNAME = "mephistophelesgrailtaker"
@@ -25,44 +25,77 @@ password.send_keys(PASSWORD)
 time.sleep(1)
 driver.find_element_by_id("signin_btn").click()
 
-# Search for the memory plot 
-time.sleep(10)
-memory_plot = driver.find_element_by_id("memory_detail_plot_placeholder")
-print(memory_plot.location)
-print(memory_plot.size)
+# Create directory to store current scraped datasets
+parent_dir = os.getcwd()
+directory = '{}_dataset'.format(PROBLEM_SET)
+path = os.path.join(parent_dir, directory)
+os.mkdir(path)
+os.chdir(path)
 
-# Create a dict to check for duplicate data points during loop-checking
-prevData = ''
+# Plot scraping function
+def plotScrape(plotType: str, data_path, yoffset: int):
 
-# Perform mouseover the memory plot
-for xoffset in range(0, memory_plot.size['width']):
+    # Search for the plot 
+    time.sleep(6)
+    plot_holder = driver.find_element_by_id('{}_detail_plot_placeholder'.format(plotType))
+    print(plot_holder.location)
+    print(plot_holder.size)
 
-    try:
-        hover = ActionChains(driver).move_to_element_with_offset(memory_plot, xoffset, memory_plot.size['height']-50)
-        hover.perform()
+    # Create a directory to store the scraped code 
+    dataset_dir = os.path.join(data_path, plotType)
+    os.mkdir(dataset_dir)
+    os.chdir(dataset_dir)
 
-    except MoveTargetOutOfBoundsException:
-        break
+    # Create a dict to check for duplicate data points during loop-checking
+    prevData = ''
 
-    try:
-        infoBox = driver.find_element_by_id('jquery-flot-comments-tooltip')
+    # Perform mouseover the memory plot
+    for xoffset in range(0, plot_holder.size['width'] - 210, 3):
 
-        if infoBox.text == prevData:
+        # Search for clickable bars in the plot 
+        try:
+            hover = ActionChains(driver).move_to_element_with_offset(plot_holder, xoffset, plot_holder.size['height']-yoffset)
+            hover.perform()
+
+        except MoveTargetOutOfBoundsException:
+            break
+
+        # Parse the plot data and the sample code each time a bar is found and clicked
+        try:
+            infoBox = driver.find_element_by_id('jquery-flot-comments-tooltip')
+
+            # Check if bar is a dupe to skip 
+            if infoBox.text == prevData:
+                continue
+            else:
+                prevData = infoBox.text
+                label = re.search('\((.+?),', prevData).group(1)
+                print(label)
+
+            hover.click().perform()
+            time.sleep(3)
+
+            # Scrape and write sample code to file
+            outputFile = open('{}_{}_{}.txt'.format(PROBLEM_SET, plotType, label), 'w')
+            sampleCode = driver.find_element_by_id('sample-submission-code')
+            outputFile.write(sampleCode.text)
+            outputFile.close()
+
+            ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
+        
+        except (NoSuchElementException, AttributeError, JavascriptException) as e:
             continue
-        else:
-            prevData = infoBox.text
-            label = re.search('\((.+?),', prevData).group(1)
-            print(label)
 
-        hover.click().perform()
-        time.sleep(3)
+    # Go back to the original directory for all datasets
+    os.chdir(data_path)
 
-        outputFile = open('{}_runtime_{}.txt'.format(PROBLEM_SET, label), 'w')
-        sampleCode = driver.find_element_by_id('sample-submission-code')
-        outputFile.write(sampleCode.text)
-        outputFile.close()
 
-        ActionChains(driver).move_to_element(driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div[1]/button')).click().perform()
-    
-    except NoSuchElementException:
-        continue
+# Scrape and generate files for runtime plot
+plotScrape('runtime', path,37)
+
+# Scrape and generate files for memory plot
+plotScrape('memory', path, 45)
+
+
+# yoffset for runtime (atoi): 37
+# yoffset for memory (atoi): 45
