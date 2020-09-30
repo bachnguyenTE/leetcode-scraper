@@ -55,7 +55,7 @@ def plotScrape(plotType: str, data_path, yoffset: int):
     prevData = ''
 
     # Perform mouseover the memory plot
-    for xoffset in range(80, plot_holder.size['width'] - 200, 4):
+    for xoffset in range(80, plot_holder.size['width'] - 200, 3):
 
         # Search for clickable bars in the plot 
         try:
