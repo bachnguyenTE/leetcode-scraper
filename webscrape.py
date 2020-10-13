@@ -1,4 +1,4 @@
-import time, re, os
+import time, re, os, io
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException, MoveTargetOutOfBoundsException, TimeoutException, JavascriptException
@@ -11,8 +11,8 @@ from selenium.webdriver.common.keys import Keys
 # dummy account information 
 USERNAME = "mephistophelesgrailtaker"
 PASSWORD = "holygrail99"
-SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/402262190/"
-PROBLEM_SET = 'twoSum'
+SUBMISSION_LOGIN = "https://leetcode.com/submissions/detail/402756293/"
+PROBLEM_SET = 'isPalindrome'
 
 # initialize Chrome driver with Selenium
 DRIVER_PATH = 'chromedriver.exe'
@@ -98,7 +98,7 @@ def plotScrape(plotType: str, data_path, yoffset: int):
 
             # Scrape and write sample code to file
             filename = '{}_{}_{}.txt'.format(PROBLEM_SET, plotType, label)
-            outputFile = open(filename, 'w')
+            outputFile = io.open(filename, 'w', encoding='utf-8')
             sampleCode = driver.find_element_by_id('sample-submission-code')
             outputFile.write(sampleCode.text)
             outputFile.close()
